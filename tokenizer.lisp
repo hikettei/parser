@@ -3,10 +3,10 @@
 (defparameter *rules* (make-hash-table))
 (defparameter *chars* (make-hash-table))
 
-(defmacro define-syntax (name con &rest ant)
+(defmacro define-syntax (name &rest ant)
   ; Define Rules like ... A (exp: what A is?): B C
   `(setq *exp*
-	 (concatenate 'list *exp* (list (list ',name ,con ',ant)))))
+	 (concatenate 'list *exp* (list (list ',name (gethash ',name *chars*) ',ant)))))
 
 (defmacro define-rule (con &rest ant)
   `(setf (gethash ',con *rules*) #'(lambda (exp)
@@ -18,13 +18,16 @@
 				       obj))))
 
 (defmacro define-char (con cd)
-  `(setf (gethash ',con *chars*) ,cd))
-
-(define-syntax symbol #'(lambda (x) (symbolp x)) args args)
+  `(progn
+     (define-rule ',con ',con)
+     (setf (gethash ',con *chars*) ,cd)))
 
 (define-rule args vars nums)
+
 (define-char vars #'(lambda (x) (symbolp x)))
 (define-char nums #'(lambda (n) (typep n 'number)))
+
+(define-syntax vars args args)
 
 (defun failed () #'(lambda () (print "Detected Undefined Syntax.")))
 
