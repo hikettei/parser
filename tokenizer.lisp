@@ -67,10 +67,13 @@
 	         (setq query (subseq query (length tree) (length query)))
 		 tree)))
 	     (setpaths ()
+	       (setq paths nil)
 	       (mapcar #'(lambda (e) (push #'(lambda () (suit? e tkn query))
 					   paths)) exp))
-	     (nexttree () (setpaths) (forward)))
-      (nexttree)
-      (nexttree))))
+	     (nexttree () (setpaths) (forward))
+	     (generate () (if query (concatenate 'list
+						 (list (nexttree))
+						 (list (nexttree))) nil)))
+      (generate))))
 
  ; (tokenizer `(+ a b c)) = (+ A B)
