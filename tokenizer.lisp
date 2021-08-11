@@ -16,6 +16,7 @@
 					   (if (funcall cd exp)
 					       (setq obj exp))))
 				       obj))))
+
 (defmacro define-char (con cd)
   `(setf (gethash ',con *chars*) ,cd))
 
@@ -23,8 +24,7 @@
 
 (define-rule args vars nums)
 (define-char vars #'(lambda (x) (symbolp x)))
-(define-char nums #'(lambda (n) n))
-
+(define-char nums #'(lambda (n) (typep n 'number)))
 
 (defun failed () #'(lambda () (print "Detected Undefined Syntax.")))
 
