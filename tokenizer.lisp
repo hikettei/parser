@@ -73,7 +73,7 @@
 	     (nexttree () (setpaths) (forward))
 	     (generate () (if query (concatenate 'list
 						 (list (nexttree))
-						 (list (nexttree))) nil)))
+						 (generate) nil))))
       (generate))))
 
  ; (tokenizer `(+ a b c)) = (+ A B)
