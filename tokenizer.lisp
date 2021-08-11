@@ -19,7 +19,7 @@
 
 (defmacro define-char (con cd)
   `(progn
-     (define-rule ',con ',con)
+     (define-rule ,con ,con)
      (setf (gethash ',con *chars*) ,cd)))
 
 (define-rule args vars nums)
@@ -27,7 +27,7 @@
 (define-char vars #'(lambda (x) (symbolp x)))
 (define-char nums #'(lambda (n) (typep n 'number)))
 
-(define-syntax vars args args)
+(define-syntax vars nums nums)
 
 (defun failed () #'(lambda () (print "Detected Undefined Syntax.")))
 
