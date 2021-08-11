@@ -28,6 +28,7 @@
 (define-char nums #'(lambda (n) (typep n 'number)))
 
 (define-syntax vars nums nums)
+(define-syntax vars vars vars)
 
 (defun failed () #'(lambda () (print "Detected Undefined Syntax.")))
 
