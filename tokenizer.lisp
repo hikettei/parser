@@ -27,25 +27,26 @@
 (define-char vars #'(lambda (x) (symbolp x)))
 (define-char nums #'(lambda (n) (typep n 'number)))
 
+(define-syntax vars vars nums)
 (define-syntax vars nums nums)
 (define-syntax vars vars vars)
 
 (defun failed () #'(lambda () (print "Detected Undefined Syntax.")))
 
-
 (defmacro with-following-rules (var rules query &body body)
   `(dotimes (i (length ,rules))
      (let ((r (nth i ,rules)))
      (let ((s (funcall (gethash r *rules*) (car ,query))))
-       (pop ,query) ; 多分まずい
+       (pop query)
        (let ((,var s)) ,@body)))))
      
 (defun suit? (rule token query)
   (if (funcall (second rule) token)
-  ; Then following (third rule), tokenizering (cdr query)
+      ; Then following (third rule), tokenizering (cdr query)
       (let ((nexts (list token))
 	    (failed? nil))
-	(with-following-rules x (third rule) (cdr query)
+	(pop query)
+	(with-following-rules x (third rule) query
 	  (setq nexts (concatenate 'list nexts (list x)))
 	  (unless x (setq failed? t)))
 	(if (eq nexts (list token))
@@ -60,8 +61,16 @@
   (let ((tkn (car query))
 	(paths nil))
     (labels ((next () (let ((r (funcall (if paths (pop paths) (failed)))))
-			(if r r (next)))))
-      (mapcar #'(lambda (e) (push #'(lambda () (suit? e tkn query)) paths)) exp)
-      (next))))
+			(if r r (next))))
+	     (forward () (let ((tree (next)))
+			   (unless (typep tree 'string)
+	         (setq query (subseq query (length tree) (length query)))
+		 tree)))
+	     (setpaths ()
+	       (mapcar #'(lambda (e) (push #'(lambda () (suit? e tkn query))
+					   paths)) exp))
+	     (nexttree () (setpaths) (forward)))
+      (nexttree)
+      (nexttree))))
 
  ; (tokenizer `(+ a b c)) = (+ A B)
