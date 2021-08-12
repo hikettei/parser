@@ -2,6 +2,8 @@
 
 (defpackage :parser (:use :cl))
 
+(in-package :parser)
+
 (defparameter *exp* nil)
 (defparameter *rules* (make-hash-table))
 (defparameter *chars* (make-hash-table))
@@ -25,7 +27,7 @@
      (define-rule ,con ,con)
      (setf (gethash ',con *chars*) ,cd)))
 
-(defun failed () #'(lambda () (print "Detected Undefined Syntax.")))
+(defun failed () #'(lambda () (error "Detected Undefined Syntax.")))
 
 (defmacro with-following-rules (var rules query &body body)
   `(dotimes (i (length ,rules))
