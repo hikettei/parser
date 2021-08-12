@@ -1,4 +1,7 @@
 
+
+;;parser
+
 (defparameter *exp* nil)
 (defparameter *rules* (make-hash-table))
 (defparameter *chars* (make-hash-table))
@@ -58,8 +61,7 @@
   `(inference ,query *exp*))
 
 (defun inference (query exp)
-  (let ((tkn (car query))
-	(paths nil))
+  (let ((paths nil))
     (labels ((next () (let ((r (funcall (if paths (pop paths) (failed)))))
 			(if r r (next))))
 	     (forward () (let ((tree (next)))
@@ -68,7 +70,7 @@
 		 tree)))
 	     (setpaths ()
 	       (setq paths nil)
-	       (mapcar #'(lambda (e) (push #'(lambda () (suit? e tkn query))
+	       (mapcar #'(lambda (e) (push #'(lambda () (suit? e (car query) query))
 					   paths)) exp))
 	     (nexttree () (setpaths) (forward))
 	     (generate () (if query (concatenate 'list
