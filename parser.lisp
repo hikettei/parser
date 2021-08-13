@@ -27,48 +27,62 @@
      (define-rule ,con ,con)
      (setf (gethash ',con *chars*) ,cd)))
 
-(defun failed () #'(lambda () (error "Detected Undefined Syntax.")))
+(defun failed (puterr?)
+  #'(lambda () (if puterr?
+		   (error "")
+		   (progn (print "failed") '@))))
 
 (defmacro with-following-rules (var rules query &body body)
   `(dotimes (i (length ,rules))
-     (let ((r (nth i ,rules)))
-     (let ((s (funcall (gethash r *rules*) (car ,query))))
-       (pop query)
-       (let ((,var s)) ,@body)))))
-     
+     (progn
+       (let ((,var (inference ,query *exp* T))) ,@body))))
+     ; issue (+ 1 1) 1 ga num to site ninsiki sarenai
 (defun suit? (rule token query)
-  (if (funcall (second rule) token)
+  (if (funcall (second rule) token) 
       ; Then following (third rule), tokenizering (cdr query)
       (let ((nexts (list token))
 	    (failed? nil))
-	(pop query)
-	(with-following-rules x (third rule) query
-	  (setq nexts (concatenate 'list nexts (list x)))
-	  (unless x (setq failed? t)))
-	(if (eq nexts (list token))
-	    nil
-	    (if failed? nil nexts)))
+	(if (third rule)
+	    (progn
+	      (with-following-rules x (third rule) (cdr query)
+		(if x (setq nexts (concatenate 'list nexts x)))
+		(unless x (setq failed? t)))
+	      (if (eq nexts (list token))
+		  nil
+		  (if failed?
+		      '@
+		      nexts)))
+	    (let ((cn (car rule)))
+	      (if (funcall (gethash cn *chars*) token)
+		  (list (list token)) nil))))
       nil))
 
-(defmacro tokenizer (query)
-  `(inference ,query *exp*))
+(defmacro tokenizer (query a)
+  `(inference ,query *exp* ,a))
 
-(defun inference (query exp)
+(defun inference (query exp next? &optional (puterr? T))
   (let ((paths nil))
-    (labels ((next () (let ((r (funcall (if paths (pop paths) (failed)))))
-			(if r r (next))))
+    (labels ((next () (let ((r (funcall (if paths (pop paths) (failed puterr?)))))
+			(if r (if (eq r '@) (if puterr?
+						(next)
+						nil) r) (next))))
 	     (forward () (let ((tree (next)))
-			   (unless (typep tree 'string)
-	         (setq query (subseq query (length tree) (length query)))
-		 tree)))
+			   (unless (or (eq tree '@) (eq tree nil))
+	                     (progn
+			       (setq query (subseq query (length tree)
+						   (length query)))     
+			       tree))))
 	     (setpaths ()
 	       (setq paths nil)
-	       (mapcar #'(lambda (e) (push #'(lambda () (suit? e (car query) query))
+	       (mapcar #'(lambda (e) (push #'(lambda ()
+					       (suit? e (car query) query))
 					   paths)) exp))
 	     (nexttree () (setpaths) (forward))
 	     (generate () (if query (concatenate 'list
 						 (list (nexttree))
 						 (generate) nil))))
-      (generate))))
+      (if query
+	  (if next?
+	    (nexttree) (generate)) nil))))
 
  ; (tokenizer `(+ a b c)) = (+ A B)
