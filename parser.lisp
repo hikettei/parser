@@ -36,7 +36,7 @@
   `(dotimes (i (length ,rules))
      (progn
        (let ((,var (inference ,query *exp* T))) ,@body))))
-     ; issue (+ 1 1) 1 ga num to site ninsiki sarenai
+
 (defun suit? (rule token query)
   (if (funcall (second rule) token) 
       ; Then following (third rule), tokenizering (cdr query)
@@ -57,7 +57,7 @@
 		  (list (list token)) nil))))
       nil))
 
-(defmacro tokenizer (query a)
+(defmacro parse (query a)
   `(inference ,query *exp* ,a))
 
 (defun inference (query exp next? &optional (puterr? T))
@@ -86,3 +86,4 @@
 	    (nexttree) (generate)) nil))))
 
  ; (tokenizer `(+ a b c)) = (+ A B)
+
