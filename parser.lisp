@@ -37,10 +37,12 @@
 		   (progn '@))))
 
 (defmacro with-following-rules (var rules query &body body)
-  `(dotimes (i (length ,rules))
-     (let* ((oexp (gethash (nth i ,rules) *exp-name-table*))
-	    (,var (inference (subseq ,query 0 (length,query)) oexp T NIL NIL)))
-       ,@body)))
+  `(let ((found-size 0))
+     (dotimes (i (length ,rules))
+       (let* ((oexp (gethash (nth i ,rules) *exp-name-table*))
+	      (,var (inference (subseq ,query (+ i found-size)) oexp T NIL NIL)))
+	 (setq found-size (+ found-size (length ,var) -1))
+	 ,@body))))
 
 (defmacro match-exp? (name token)
   `(let ((when-exp (gethash ,name *exp-name-table*))
