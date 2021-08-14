@@ -10,6 +10,8 @@
 (defparameter *rules* (make-hash-table))
 (defparameter *chars* (make-hash-table))
 
+(defparameter *pointer* 0)
+
 (defmacro define-syntax (var syntax-name name &rest ant)
   `(let ((syntax (list (list ',name ',ant))))
     (setq ,var (concatenate 'list ,var syntax))
@@ -37,7 +39,7 @@
 (defmacro with-following-rules (var rules query &body body)
   `(dotimes (i (length ,rules))
      (let* ((oexp (gethash (nth i ,rules) *exp-name-table*))
-	    (,var (inference ,query oexp T NIL NIL)))
+	    (,var (inference (subseq ,query 0 (length,query)) oexp T NIL NIL)))
        ,@body)))
 
 (defmacro match-exp? (name token)
@@ -58,33 +60,45 @@
 	(if (second rule)
 	    (progn
 	      (with-following-rules x (second rule) (cdr query)
-		(if x (setq nexts (concatenate 'list nexts x))
-		      (setq failed? t)))
+		(if x (setq nexts (concatenate 'list nexts (list x)))
+		    (setq failed? t)))
 	      (if (eq nexts (list token))
 		  nil
 		  (if failed?
 		      '@
-		      nexts)))
+		       nexts)))
 	    (let ((cn (car rule)))
 	      (if (funcall (gethash cn *chars*) token)
-		  (list (list token)) nil))))
+		  (progn
+		    (list token)) nil))))
       nil))
 
 (defmacro parse (query a)
-  `(inference ,query *exp* ,a))
+  `(progn
+     (setq *pointer* 0)
+     (inference ,query *exp* ,a)))
 
-(defun inference (query exp next? &optional (puterr? T) (changequery? T))
+(defun remove-nth (n list)
+  (declare
+   (type (integer 0) n)
+   (type list list))
+  (if (or (zerop n) (null list))
+      (cdr list)
+      (cons (car list) (remove-nth (1- n) (cdr list)))))
+
+(defun inference (query exp next? &optional (puterr? T) (cq T))
   (let ((paths nil))
     (labels ((next () (let ((r (funcall (if paths (pop paths) (failed puterr?)))))
 			(if r (if (eq r '@) (if puterr?
 						(next)
-						nil) r) (next))))
+						nil) (values r iter)) (next))))
 	     (forward () (let ((tree (next)))
 			   (unless (or (eq tree '@) (eq tree nil))
 	                     (progn
-			       (if changequery?
-				   (setq query (subseq query (length tree)
-						   (length query))) )    
+			       (setq *pointer* (+ *pointer* (length tree)))
+			       (if cq
+				   (dotimes (_ *pointer*)
+				     (pop query)))
 			       tree))))
 	     (setpaths ()
 	       (setq paths nil)

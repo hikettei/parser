@@ -9,6 +9,8 @@
 (define-syntax *exp* var-name vars) ; 
 (define-syntax *exp* numbers   nums) ; 
 
-(define-syntax *exp* funcall vars numbers numbers)
-(define-syntax *exp* addnum  nums var-name numbers)
+(define-syntax *exp* nest     vars funcall funcall)
+
+(define-syntax *exp* funcall  vars numbers numbers)
+(define-syntax *exp* addnum   nums var-name numbers)
 ; (tokenizer '(+ 1 + 1 1)) = (+ 1 (+ 1 1))
