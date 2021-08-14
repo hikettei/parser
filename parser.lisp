@@ -60,7 +60,6 @@
 	      (with-following-rules x (second rule) (cdr query)
 		(if x (setq nexts (concatenate 'list nexts x))
 		      (setq failed? t)))
-	     ; (print nexts)
 	      (if (eq nexts (list token))
 		  nil
 		  (if failed?
@@ -68,7 +67,7 @@
 		      nexts)))
 	    (let ((cn (car rule)))
 	      (if (funcall (gethash cn *chars*) token)
-		  (list token) nil))))
+		  (list (list token)) nil))))
       nil))
 
 (defmacro parse (query a)
