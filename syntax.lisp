@@ -3,12 +3,12 @@
 
 (define-rule args vars nums)
 
-(define-char vars #'(lambda (x) (symbolp x)))
+(define-char vars #'(lambda (x) (typep x 'symbol)))
 (define-char nums #'(lambda (n) (typep n 'number)))
 
-(define-syntax vars) ; 
-(define-syntax nums) ; 
+(define-syntax *exp* var-name vars) ; 
+(define-syntax *exp* numbers   nums) ; 
 
-(define-syntax vars nums nums)
-
+(define-syntax *exp* funcall vars numbers numbers)
+(define-syntax *exp* addnum  nums var-name numbers)
 ; (tokenizer '(+ 1 + 1 1)) = (+ 1 (+ 1 1))
