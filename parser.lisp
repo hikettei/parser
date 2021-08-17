@@ -34,7 +34,8 @@
   `(progn
      (define-rule ,con ,con)
      (setf (gethash ',con *chars*) ,cd)
-     (define-syntax ,var ,con ,con)))
+     (define-syntax ,var ,con ,con)
+     (define-syntax ,var @ ,con)))
 
 (defun failed (puterr?)
   #'(lambda () (if puterr?
@@ -44,23 +45,24 @@
 (defmacro with-following-rules (var rules query &body body)
   `(let ((found-size 0))
      (dotimes (i (length ,rules))
-       (let* ((oexp (gethash (nth i ,rules) *exp-name-table*))
+       (let* ((oexp (concatenate 'list
+				 (gethash '@ *exp-name-table*)
+				 (gethash (nth i ,rules) *exp-name-table*)))
 	      (,var (inference (subseq ,query (+ i found-size)) oexp T NIL NIL)))
 	 (setq found-size (+ found-size (length ,var) -1)) ; mark
 	 ,@body))))
 
-(defmacro match-exp? (name token)
+(defmacro match-exp? (name token query)
   `(let ((when-exp (gethash ,name *exp-name-table*))
 	 (when-char (gethash ,name *chars*))
 	 (when-rules (gethash ,name *rules*)))
-     (declare (ignore when-exp))
      (cond
-       ;(when-exp (inference (list token))) 一文字目にSyntax使えない!!
        (when-char (funcall when-char ,token))
-       (when-rules (funcall when-rules ,token)))))
+       (when-rules (funcall when-rules ,token))
+       (when-exp (if (inference ,query when-exp T NIL NIL) t nil)))))
 
 (defun suit? (rule token query)
-  (if (match-exp? (car rule) token)
+  (if (match-exp? (car rule) token query)
       ; Then following (third rule), tokenizering (cdr query)
       (let ((nexts (list token))
 	    (failed? nil))
