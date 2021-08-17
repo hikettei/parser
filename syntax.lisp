@@ -9,7 +9,6 @@
 
 (define-syntax *exp* funcall  vars nums nums)
 (define-syntax *exp* funcall  vars funcall funcall)
-;(define-syntax *exp* set-query vars vars setq nums)
+(define-syntax *exp* set-query vars vars setq @)
+(define-syntax *exp* set-query vars vars setq funcall)
 
-;(define-syntax *exp* callfunc1 vars nest)
-; (tokenizer '(+ 1 + 1 1)) = (+ 1 (+ 1 1))
