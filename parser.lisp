@@ -14,8 +14,12 @@
 
 (defmacro define-syntax (var syntax-name name &rest ant)
   `(let ((syntax (list (list ',name ',ant))))
-    (setq ,var (concatenate 'list ,var syntax))
-    (setf (gethash ',syntax-name *exp-name-table*) syntax)))
+     (setq ,var (concatenate 'list ,var syntax))
+     (let ((exp-v (gethash ',syntax-name *exp-name-table*)))
+       (setf (gethash ',syntax-name *exp-name-table*)
+	     (if exp-v
+		 (concatenate 'list exp-v syntax)
+		 (list syntax))))))
 
 (defmacro define-rule (con &rest ant)
   `(setf (gethash ',con *rules*) #'(lambda (exp)
