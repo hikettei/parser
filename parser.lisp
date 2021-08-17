@@ -26,10 +26,11 @@
 					       (setq obj exp))))
 				       obj))))
 
-(defmacro define-char (con cd)
+(defmacro define-char (var con cd)
   `(progn
      (define-rule ,con ,con)
-     (setf (gethash ',con *chars*) ,cd)))
+     (setf (gethash ',con *chars*) ,cd)
+     (define-syntax ,var ,con ,con)))
 
 (defun failed (puterr?)
   #'(lambda () (if puterr?
@@ -40,8 +41,10 @@
   `(let ((found-size 0))
      (dotimes (i (length ,rules))
        (let* ((oexp (gethash (nth i ,rules) *exp-name-table*))
+	      ;*exp-name-table*内のルールを二重リストにすれば
+	      ;*exp*実装できそ, ruleも参照したい
 	      (,var (inference (subseq ,query (+ i found-size)) oexp T NIL NIL)))
-	 (setq found-size (+ found-size (length ,var) -1))
+	 (setq found-size (+ found-size (length ,var) -1)) ; mark
 	 ,@body))))
 
 (defmacro match-exp? (name token)
@@ -79,14 +82,6 @@
   `(progn
      (setq *pointer* 0)
      (inference ,query *exp* ,a)))
-
-(defun remove-nth (n list)
-  (declare
-   (type (integer 0) n)
-   (type list list))
-  (if (or (zerop n) (null list))
-      (cdr list)
-      (cons (car list) (remove-nth (1- n) (cdr list)))))
 
 (defun inference (query exp next? &optional (puterr? T) (cq T))
   (let ((paths nil))
