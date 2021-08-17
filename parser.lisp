@@ -19,7 +19,7 @@
        (setf (gethash ',syntax-name *exp-name-table*)
 	     (if exp-v
 		 (concatenate 'list exp-v syntax)
-		 (list syntax))))))
+		 syntax)))))
 
 (defmacro define-rule (con &rest ant)
   `(setf (gethash ',con *rules*) #'(lambda (exp)
@@ -45,8 +45,6 @@
   `(let ((found-size 0))
      (dotimes (i (length ,rules))
        (let* ((oexp (gethash (nth i ,rules) *exp-name-table*))
-	      ;*exp-name-table*内のルールを二重リストにすれば
-	      ;*exp*実装できそ, ruleも参照したい
 	      (,var (inference (subseq ,query (+ i found-size)) oexp T NIL NIL)))
 	 (setq found-size (+ found-size (length ,var) -1)) ; mark
 	 ,@body))))
