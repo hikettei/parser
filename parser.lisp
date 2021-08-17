@@ -7,10 +7,8 @@
 
 (defparameter *exp* nil)
 (defparameter *exp-name-table* (make-hash-table))
-(defparameter *rules* (make-hash-table))
 (defparameter *chars* (make-hash-table))
-
-(defparameter *pointer* 0)
+(defparameter *rules* nil)
 
 (defmacro define-syntax (var syntax-name name &rest ant)
   `(let ((syntax (list (list ',name ',ant))))
@@ -49,7 +47,8 @@
 				 (gethash '@ *exp-name-table*)
 				 (gethash (nth i ,rules) *exp-name-table*)))
 	      (,var (inference (subseq ,query (+ i found-size)) oexp T NIL NIL)))
-	 (setq found-size (+ found-size (length ,var) -1)) ; mark
+;	 (if (> (length ,var) 1) ; 多分まずい
+;	     (setq *pointer* (+ (length,var) *pointer*)))
 	 ,@body))))
 
 (defmacro match-exp? (name token query)
@@ -89,17 +88,20 @@
 
 (defun inference (query exp next? &optional (puterr? T) (cq T))
   (let ((paths nil))
-    (labels ((next () (let ((r (funcall (if paths (pop paths) (failed puterr?)))))
+   (labels ((next () (let ((r (funcall (if paths (pop paths) (failed puterr?)))))
 			(if r (if (eq r '@) (if puterr?
 						(next)
-						nil) (values r iter)) (next))))
+						nil) r) (next))))	     
 	     (forward () (let ((tree (next)))
 			   (unless (or (eq tree '@) (eq tree nil))
 	                     (progn
-			       (setq *pointer* (+ *pointer* (length tree)))
+			       (if (= (length tree) 1)
+				   (setq *pointer* (+ *pointer* (length tree))))
 			       (if cq
-				   (dotimes (_ *pointer*)
-				     (pop query)))
+				   (progn
+				     (dotimes (_ *pointer*)
+				       (pop query))
+				     (setq *pointer* 0)))
 			       tree))))
 	     (setpaths ()
 	       (setq paths nil)
